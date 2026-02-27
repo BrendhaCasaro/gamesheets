@@ -1,0 +1,11 @@
+# docker run -p 5432:5432 -e POSTGRES_USER="gamesheets" -e POSTGRES_PASSWORD="gamesheets" --name gamesheets postgres:latest
+
+
+services:
+  gamesheetsdb:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "gamesheets"
+      POSTGRES_PASSWORD: "gamesheets"
