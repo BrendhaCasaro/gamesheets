@@ -24,7 +24,7 @@ public class FileProcessService {
                 .orElseThrow(() -> new EntityNotFoundException("FileProcess with id " + id + " not found!"));
     }
 
-    public FileProcess createFileProcess(MultipartFile file) throws IOException {
+    public FileProcess createFileProcess(MultipartFile file) {
         FileProcess fileProcess = new FileProcess();
         validateFile(file);
         fileProcessRepository.save(fileProcess);

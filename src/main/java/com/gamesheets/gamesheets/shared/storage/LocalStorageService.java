@@ -12,25 +12,21 @@ import java.util.UUID;
 @Service
 public class LocalStorageService implements StorageService {
 
-    public String uploadFile(MultipartFile file, UUID fileId) throws IOException {
+    public String uploadFile(MultipartFile file, UUID fileId) {
         Path location = Paths.get("tmp");
-
-        if (!Files.exists(location)) {
-            Files.createDirectories(location);
-        }
-
-        Path destinationFile;
-
         try {
-            destinationFile = location.resolve(
-                    Paths.get(fileId.toString()));
+            if (!Files.exists(location)) {
+            Files.createDirectories(location);
+            }
+            Path destinationFile;
 
+            destinationFile = location.resolve(Paths.get(fileId.toString()));
             file.transferTo(destinationFile);
-        } catch (IOException e) {
-            throw new IOException("Failed to store file " + file.getOriginalFilename(), e);
-        }
 
-        return destinationFile.toString();
+            return destinationFile.toString();
+        } catch (IOException e) {
+            throw new StorageException("Failed to store file " + file.getOriginalFilename(), e.getCause());
+        }
     }
 
     public String getFileLink(String fileId) {

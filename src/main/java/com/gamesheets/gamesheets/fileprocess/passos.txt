@@ -1,0 +1,669 @@
+Projeto de Mentoria — Processamento de CSV com Spring Boot
+
+Objetivo do Projeto
+
+Construir uma aplicação Spring Boot capaz de:
+
+Receber um CSV (upload ou link)
+
+Validar o conteúdo
+
+Enviar o arquivo para Cloud Storage
+
+Processar os jogos assincronamente enriquecendo com a API RAWG
+
+Expor endpoint de status
+
+(Opcional) Proteger com autenticação e autorização
+
+
+A evolução será incremental, sempre garantindo algo funcional ao final de cada etapa.
+
+
+---
+
+Estrutura do Projeto
+
+(Arquitetura por Contexto + Camadas)
+
+com.seuprojeto
+
+├── config/
+│   ├── AsyncConfig.java
+│   ├── StorageConfig.java
+│   └── SecurityConfig.java (fase final)
+
+├── shared/
+│   ├── exception/
+│   ├── util/
+│   └── storage/
+│       ├── StorageService.java
+│       ├── dto/
+│       └── impl/
+│           ├── S3StorageService.java
+│           └── GcsStorageService.java
+
+├── accounts/
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── model/
+│   └── dto/
+
+├── fileprocessing/
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── model/
+│   ├── job/
+│   └── dto/
+
+├── games/
+│   ├── service/
+│   ├── integration/
+│   │   └── RawgClient.java
+│   ├── model/
+│   └── dto/
+
+└── SeuprojetoApplication.java
+
+
+---
+
+Decisão Arquitetural Importante
+
+O StorageService fica em shared/storage porque:
+
+É uma abstração reutilizável
+
+Não pertence a um domínio específico
+
+Permite trocar implementação (S3, GCS etc.)
+
+
+As implementações concretas ficam em:
+
+shared/storage/impl
+
+Exemplo:
+
+S3StorageService
+
+GcsStorageService
+
+
+
+---
+
+O RawgClient fica dentro de:
+
+games/integration
+
+Porque é uma integração específica do contexto de jogos.
+
+
+---
+
+FASE 1 — Fundação (CRUD básico)
+
+Objetivo
+
+Criar a entidade ProcessingRequest e expor endpoints simples.
+
+
+---
+
+Onde implementar
+
+fileprocessing/model/ProcessingRequest
+fileprocessing/repository
+fileprocessing/service
+fileprocessing/controller
+fileprocessing/dto
+
+
+---
+
+Funcionalidade
+
+Endpoints:
+
+POST /requests
+GET /requests/{id}
+
+
+---
+
+Campos da entidade
+
+id
+
+status (RECEIVED, PROCESSING, DONE, ERROR)
+
+createdAt
+
+updatedAt
+
+fileUrl (pode começar como null)
+
+
+
+---
+
+O que pesquisar
+
+Spring Data JPA
+
+@Entity
+
+@Id / @GeneratedValue
+
+Enum persistido no banco
+
+@RestController
+
+DTO vs Entity
+
+ResponseEntity
+
+
+
+---
+
+Critério para avançar
+
+Entender claramente o fluxo:
+
+
+Controller → Service → Repository
+
+Conseguir explicar responsabilidade de cada camada
+
+Endpoint funcionando e testado no Postman
+
+
+
+---
+
+FASE 2 — Upload e Validação de CSV
+
+Objetivo
+
+Receber um MultipartFile e validar estrutura mínima do CSV.
+
+
+---
+
+Onde implementar
+
+Inicialmente dentro de:
+
+fileprocessing/service
+
+Se crescer muito, extrair para:
+
+fileprocessing/service/CsvParserService.java
+
+
+---
+
+Fluxo
+
+1. Receber arquivo via MultipartFile
+
+
+2. Validar se possui coluna obrigatória (ex: game_name)
+
+
+3. Se inválido → lançar exceção customizada
+
+
+4. Se válido → criar ProcessingRequest com status:
+
+
+
+RECEIVED
+
+Ainda não é necessário enviar para cloud nessa etapa.
+
+
+---
+
+O que pesquisar
+
+MultipartFile
+
+Leitura de CSV (OpenCSV ou BufferedReader)
+
+Streams em Java
+
+Tratamento global de exceção com @ControllerAdvice
+
+Criação de exceções customizadas
+
+
+
+---
+
+Objetivo pedagógico
+
+Aprender:
+
+Manipulação de arquivos
+
+Validação de dados
+
+Tratamento de erro
+
+Organização de responsabilidades
+
+
+
+---
+
+FASE 3 — Cloud Storage
+
+Objetivo
+
+Enviar o CSV validado para um bucket de armazenamento.
+
+
+---
+
+Onde implementar
+
+Interface:
+
+shared/storage/StorageService.java
+
+Responsabilidades da interface:
+
+upload(File file)
+
+generateDownloadUrl(String path)
+
+
+
+---
+
+Implementação concreta
+
+shared/storage/impl/S3StorageService.java
+
+ou
+
+shared/storage/impl/GcsStorageService.java
+
+
+---
+
+Configuração
+
+config/StorageConfig.java
+
+
+---
+
+Fluxo
+
+O service de fileprocessing deve chamar a interface:
+
+StorageService
+
+Nunca depender da implementação concreta.
+
+
+---
+
+O que pesquisar
+
+Injeção de dependência
+
+@Configuration
+
+@Bean
+
+Variáveis de ambiente
+
+SDK do provedor (S3 ou GCS)
+
+Conceito de abstração e desacoplamento
+
+
+
+---
+
+Critério para avançar
+
+Se trocar S3 por GCS, apenas a implementação muda.
+
+O service não deve conhecer detalhes do provider.
+
+
+---
+
+FASE 4 — Processamento Assíncrono
+
+Objetivo
+
+Processar os jogos em background após o upload.
+
+
+---
+
+Onde implementar
+
+Classe de job:
+
+fileprocessing/job/ProcessingJob.java
+
+Configuração:
+
+config/AsyncConfig.java
+
+
+---
+
+Responsabilidades do Service
+
+O service deve:
+
+1. Marcar status como:
+
+
+
+PROCESSING
+
+2. Disparar método anotado com:
+
+
+
+@Async
+
+3. Após finalizar:
+
+
+
+DONE se sucesso
+
+ERROR se falha
+
+
+
+---
+
+O que pesquisar
+
+@EnableAsync
+
+@Async
+
+CompletableFuture
+
+Noções básicas de concorrência
+
+Transações em métodos assíncronos
+
+
+
+---
+
+Objetivo pedagógico
+
+Introduzir:
+
+Assincronismo
+
+Separação entre requisição HTTP e processamento real
+
+
+
+---
+
+FASE 5 — Integração com RAWG
+
+Objetivo
+
+Buscar dados adicionais para cada jogo presente no CSV.
+
+Exemplos:
+
+descrição
+
+rating
+
+plataformas
+
+data de lançamento
+
+
+
+---
+
+Onde implementar
+
+games/integration/RawgClient.java
+
+
+---
+
+Responsabilidades do RawgClient
+
+Chamar a API RAWG
+
+Mapear resposta
+
+Retornar DTO interno da aplicação
+
+
+O service de games coordena a lógica.
+
+
+---
+
+O que pesquisar
+
+WebClient
+
+RestTemplate
+
+Consumo de APIs REST
+
+DTO externo vs DTO interno
+
+Tratamento de erro HTTP
+
+
+
+---
+
+Objetivo pedagógico
+
+Ensinar:
+
+Separação entre integração externa e domínio
+
+Não misturar lógica HTTP dentro do service principal
+
+
+
+---
+
+FASE 6 — Endpoint de Status Completo
+
+Objetivo
+
+Retornar:
+
+status do processamento
+
+link de download (quando disponível)
+
+
+
+---
+
+Onde implementar
+
+Controller:
+
+fileprocessing/controller
+
+DTO:
+
+fileprocessing/dto/ProcessingStatusResponse.java
+
+
+---
+
+Regra
+
+Se status =
+
+DONE
+
+retornar:
+
+downloadUrl
+
+Caso contrário:
+
+downloadUrl = null
+
+
+---
+
+O que pesquisar
+
+Construção de DTO condicional
+
+ResponseEntity
+
+Mapeamento de entidade → DTO
+
+
+
+---
+
+FASE 7 — Autenticação e Autorização
+
+(Opcional / Hard Mode)
+
+Objetivo
+
+Garantir que somente o dono possa acessar seus arquivos.
+
+
+---
+
+Onde implementar
+
+Novo contexto:
+
+accounts/
+
+Relacionamento:
+
+User 1:N ProcessingRequest
+
+Configuração:
+
+config/SecurityConfig.java
+
+
+---
+
+O que pesquisar
+
+Spring Security
+
+SecurityFilterChain
+
+Autenticação básica ou JWT
+
+Autorização no nível de service
+
+Relacionamento entre entidades
+
+
+
+---
+
+Objetivo pedagógico
+
+Ensinar:
+
+Segurança
+
+Ownership de dados
+
+Regras de autorização
+
+
+
+---
+
+Evolução da Curva de Aprendizado
+
+Fase	Complexidade	Foco Principal
+
+1	Baixa	Estrutura em camadas
+2	Média leve	Upload e validação
+3	Média	Abstração e infraestrutura
+4	Média-alta	Assincronismo
+5	Média-alta	Integração externa
+6	Média	Modelagem de resposta
+7	Alta	Segurança
+
+
+
+---
+
+Regra Importante
+
+Sempre garantir algo funcionando ao final de cada etapa.
+
+
+---
+
+Boas Práticas (Introduzir Gradualmente)
+
+Durante o projeto, introduzir:
+
+Logs estruturados
+
+Testes unitários para services
+
+Testes de integração para controllers
+
+Dockerização
+
+Documentação da API com OpenAPI / Swagger
+
+
+Nunca introduzir complexidade arquitetural antes da base estar sólida.
+
+
+---
+
+Critério de Evolução
+
+Só avançar quando:
+
+O código estiver organizado
+
+As responsabilidades estiverem claras
+
+O fluxo estiver entendido
+
+A pessoa conseguir explicar o que implementou
+
+
+
+---
+
+Princípio da Mentoria
+
+O objetivo não é apenas entregar funcionalidades.
+
+O foco é desenvolver raciocínio arquitetural e entendimento de design de software.

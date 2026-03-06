@@ -6,6 +6,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 public interface StorageService {
-    String uploadFile (MultipartFile file, UUID fileId) throws IOException;
+    String uploadFile (MultipartFile file, UUID fileId);
     String getFileLink(String fileId);
 }
