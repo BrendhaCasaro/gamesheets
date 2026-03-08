@@ -1,7 +1,10 @@
 package com.gamesheets.gamesheets.fileprocess.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -24,7 +27,7 @@ public class FileProcess {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private FileProcessStatus status =  FileProcessStatus.QUEUED;
+    private FileProcessStatus status = FileProcessStatus.QUEUED;
 
     @Column
     private String fileUrl;
