@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -36,7 +35,7 @@ public class FileProcessService {
 
     private void validateFile(MultipartFile file) {
         if (file.isEmpty()) {
-          throw new MultipartException("File is empty!");
+            throw new MultipartException("File is empty!");
         }
 
         if (!Objects.equals(file.getContentType(), "text/csv")) {
