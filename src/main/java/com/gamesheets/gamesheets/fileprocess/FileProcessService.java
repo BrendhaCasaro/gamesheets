@@ -26,11 +26,11 @@ public class FileProcessService {
     public FileProcess createFileProcess(MultipartFile file) {
         FileProcess fileProcess = new FileProcess();
         validateFile(file);
-        fileProcessRepository.save(fileProcess);
 
-        storageService.uploadFile(file, fileProcess.getId());
+        String url = storageService.uploadFile(file);
+        fileProcess.setFileUrl(url);
 
-        return fileProcess;
+        return fileProcessRepository.save(fileProcess);
     }
 
     private void validateFile(MultipartFile file) {

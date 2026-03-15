@@ -25,11 +25,11 @@ public class LocalStorageService implements StorageService {
         }
     }
 
-    public String uploadFile(MultipartFile file, UUID fileId) {
+    public String uploadFile(MultipartFile file) {
         try {
             Path destinationFile;
 
-            destinationFile = location.resolve(Paths.get(fileId.toString()));
+            destinationFile = location.resolve(Paths.get(UUID.randomUUID().toString()));
             file.transferTo(destinationFile);
 
             return destinationFile.toString();
