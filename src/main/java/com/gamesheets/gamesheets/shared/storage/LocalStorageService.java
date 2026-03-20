@@ -37,8 +37,4 @@ public class LocalStorageService implements StorageService {
             throw new StorageException("Failed to store file " + file.getOriginalFilename(), e);
         }
     }
-
-    public String getFileLink(String fileId) {
-        return "";
-    }
 }

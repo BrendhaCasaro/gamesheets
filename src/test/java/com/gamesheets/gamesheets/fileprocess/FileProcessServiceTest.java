@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartException;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,7 +57,11 @@ public class FileProcessServiceTest {
         FileProcess fileProcess = randomFileProcess();
         when(fileProcessRepository.findById(fileProcess.getId())).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> fileProcessService.getFileProcessById(fileProcess.getId()));
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> fileProcessService.getFileProcessById(fileProcess.getId())
+        );
+        assertEquals("FileProcess with id " + fileProcess.getId() + " not found!", exception.getMessage());
     }
 
     @Test
@@ -66,11 +72,46 @@ public class FileProcessServiceTest {
                 "text/csv",
                 "test,1,bla".getBytes()
         );
+        when(storageService.uploadFile(mockMultipartFile)).thenReturn("https://example.com/test.csv");
         when(fileProcessRepository.save(any())).thenReturn(randomFileProcess());
         FileProcess result = fileProcessService.createFileProcess(mockMultipartFile);
 
         assertNotNull(result);
         assertNotNull(result.getFileUrl());
+        verify(storageService).uploadFile(mockMultipartFile);
+        verify(fileProcessRepository).save(any(FileProcess.class));
+    }
+
+    @Test
+    void shouldThrowMultipartExceptionWhenFileIsEmpty() {
+        MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                "file",
+                "test.csv",
+                "text/csv",
+                new byte[0]
+        );
+
+        MultipartException exception = assertThrows(
+                MultipartException.class,
+                () -> fileProcessService.createFileProcess(mockMultipartFile)
+        );
+        assertEquals("File is empty!", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowMultipartExceptionWhenFileContentTypeIsNotCsv() {
+        MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                "file",
+                "test.txt",
+                "text/plain",
+                "test".getBytes()
+        );
+
+        MultipartException exception = assertThrows(
+                MultipartException.class,
+                () -> fileProcessService.createFileProcess(mockMultipartFile)
+        );
+        assertEquals("File content type is not csv!", exception.getMessage());
     }
 
 }
