@@ -1,0 +1,14 @@
+MVP do gamesheets:
+
+Objetivo:
+    Receber um CSV;
+    Retornar um CSV com os dados dos jogos que estão no CSV.
+
+
+Passos para atingir o objetivo (MVP):
+    Receber o(s bytes do) arquivo, via HTTP; ✅
+    Valido o arquivo; ✅
+    Jogar na API do RAWG;
+    Criar um novo CSV com mais infos dos jogos recebidos no CSV enviado pelo usuário;
+    Salvar o arquivo em algum lugar (path ou link); ✅
+    Retornar por onde baixar o arquivo para o usuário na rota de status do processo;
