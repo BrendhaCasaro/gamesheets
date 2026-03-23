@@ -6,5 +6,10 @@ package com.gamesheets.gamesheets.games.model;
 // Plataforma
 // Metacritic
 
-public record Game(String title, String backgroundImage, String released, String[] plataforms, Integer metacritic) {
+public record Game(String title,
+                   String backgroundImage,
+                   String released,
+                   String[] plataforms,
+                   Integer metacritic
+) {
 }

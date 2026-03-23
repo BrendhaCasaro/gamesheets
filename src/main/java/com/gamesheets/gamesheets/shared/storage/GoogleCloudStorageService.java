@@ -1,5 +1,5 @@
 package com.gamesheets.gamesheets.shared.storage;
-
+/*
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.storage.StorageOptions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,6 @@ import com.google.cloud.storage.Storage;
 
 import static jdk.xml.internal.SecuritySupport.getResourceAsStream;
 
-@Service
 public class GoogleCloudStorageService {
         private final Path pathKeyGCP = Paths.get("gcp-secret.json");
 
@@ -44,3 +43,4 @@ public class GoogleCloudStorageService {
         }
     }
 }
+*/
