@@ -46,12 +46,13 @@ public class RawgClient {
                 Integer metacritic = item.path("metacritic").isNull() ? null : item.path("metacritic").asInt();
 
                 List<String> plataforms = new ArrayList<>();
-                for (JsonNode p : item.path("plataforms")) {
-                    String plataformName = p.path("plataform").path("name").asText();
+                for (JsonNode p : item.path("platforms")) {
+                    String plataformName = p.path("platform").path("name").asText();
                     plataforms.add(plataformName);
                 }
                 games.add(new Game(gameTitle, backgroundImage, released, plataforms, metacritic));
             }
+            System.out.println(games);
             return games;
         } catch (Exception e) {
             throw new RuntimeException(e);
