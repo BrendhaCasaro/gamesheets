@@ -9,12 +9,15 @@ import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RawgClient {
     private final HttpClient client = HttpClient.newHttpClient();
     private final String apiKey;
+    ObjectMapper mapper = new ObjectMapper();
+    String baseURL = "https://api.rawg.io/api/games";
 
     public RawgClient(String apiKey) {
         this.apiKey = apiKey;
@@ -22,20 +25,17 @@ public class RawgClient {
 
     public List<Game> searchGames(String title, int page, int pageSize) {
         try {
-            String baseURL = "https://api.rawg.io/api/games";
-            String encodedTitle = URLEncoder.encode(title, "UTF-8");
+            String encodedTitle = URLEncoder.encode(title, StandardCharsets.UTF_8);
 
             String params = "?key=" + apiKey + "&search=" + encodedTitle + "&page=" + page + "&page_size=" + pageSize;
             HttpRequest request = HttpRequest.newBuilder().uri(URI.create(baseURL + params)).build();
 
-
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                throw new RuntimeException("The status code not is 200");
+                throw new RuntimeException("The status code is not 200");
             }
 
-            ObjectMapper mapper = new ObjectMapper();
             JsonNode results = mapper.readTree(response.body()).path("results");
             List<Game> games = new ArrayList<>();
 
@@ -45,14 +45,13 @@ public class RawgClient {
                 String released = item.path("released").asText();
                 Integer metacritic = item.path("metacritic").isNull() ? null : item.path("metacritic").asInt();
 
-                List<String> plataforms = new ArrayList<>();
+                List<String> platforms = new ArrayList<>();
                 for (JsonNode p : item.path("platforms")) {
-                    String plataformName = p.path("platform").path("name").asText();
-                    plataforms.add(plataformName);
+                    String platformName = p.path("platform").path("name").asText();
+                    platforms.add(platformName);
                 }
-                games.add(new Game(gameTitle, backgroundImage, released, plataforms, metacritic));
+                games.add(new Game(gameTitle, backgroundImage, released, platforms, metacritic));
             }
-            System.out.println(games);
             return games;
         } catch (Exception e) {
             throw new RuntimeException(e);
