@@ -1,4 +1,4 @@
-package com.gamesheets.gamesheets.games.model;
+package com.gamesheets.gamesheets.games.dto;
 
 // titulo,
 // imagem de capa

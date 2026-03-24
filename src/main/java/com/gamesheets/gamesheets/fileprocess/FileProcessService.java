@@ -14,8 +14,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class FileProcessService {
-    final private FileProcessRepository fileProcessRepository;
-    final private StorageService storageService;
+    private final FileProcessRepository fileProcessRepository;
+    private final StorageService storageService;
 
     public FileProcess getFileProcessById(UUID id) {
         return fileProcessRepository
