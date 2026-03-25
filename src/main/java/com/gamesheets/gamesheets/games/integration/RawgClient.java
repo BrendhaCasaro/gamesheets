@@ -14,12 +14,14 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class RawgClient implements ExternalGameAPI {
     private final HttpClient client = HttpClient.newHttpClient();
     private final String apiKey;
     ObjectMapper mapper = new ObjectMapper();
     String baseURL = "https://api.rawg.io/api/games";
+    Logger logger = Logger.getLogger(RawgClient.class.getName());
 
     public RawgClient(String apiKey) {
         this.apiKey = apiKey;
@@ -35,12 +37,15 @@ public class RawgClient implements ExternalGameAPI {
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
+            logger.severe("Error while sending request to URL" + request.toString());
             throw new ExternalGameAPIException("Error while sending request to URL: " + e.getMessage(), e);
         }
 
-        // pôr logs do retorno da api externa e uma exceção com mais infos
         if (response.statusCode() != 200) {
-            throw new ExternalGameAPIException("The status code is not 200", null);
+            logger.severe("Unexpected error in API response" + response.statusCode());
+            logger.info(response.body());
+
+            throw new ExternalGameAPIException("Unexpected error in API response");
         }
 
         JsonNode results;
