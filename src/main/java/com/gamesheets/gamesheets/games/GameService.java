@@ -13,7 +13,7 @@ import java.util.List;
 public class GameService {
     private final ExternalGameAPI externalGameAPI;
 
-    public List<Game> getGamesDetails(String[] titles) {
+    public List<Game> getGamesDetails(List<String> titles) {
         int page = 1;
         int pageSize = 1;
         List<Game> games = new ArrayList<>();

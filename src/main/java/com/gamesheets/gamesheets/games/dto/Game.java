@@ -15,3 +15,6 @@ public record Game(String title,
                    Integer metacritic
 ) {
 }
+
+
+
