@@ -6,6 +6,8 @@ import com.gamesheets.gamesheets.games.dto.Game;
 import com.gamesheets.gamesheets.shared.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartException;
@@ -34,6 +36,7 @@ public class FileProcessService {
     public FileProcess createFileProcess(MultipartFile file) {
         FileProcess fileProcess = new FileProcess();
         validateFile(file);
+        // add logic of status of file process
         List<String> titles = getTitlesFromCSV(file);
         List<Game> games = gameService.getGamesDetails(titles);
         MultipartFile generatedFile = generateCSVFromGames(games);
@@ -42,6 +45,12 @@ public class FileProcessService {
         fileProcess.setFileUrl(url);
 
         return fileProcessRepository.save(fileProcess);
+    }
+
+    public Resource getCSVByFileProcessId(UUID fileProcessId) {
+        FileProcess fileProcess = getFileProcessById(fileProcessId);
+
+        return new FileSystemResource(fileProcess.getFileUrl());
     }
 
     private void validateFile(MultipartFile file) {
