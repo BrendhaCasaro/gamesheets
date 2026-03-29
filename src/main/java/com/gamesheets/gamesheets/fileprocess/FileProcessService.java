@@ -1,6 +1,7 @@
 package com.gamesheets.gamesheets.fileprocess;
 
 import com.gamesheets.gamesheets.fileprocess.model.FileProcess;
+import com.gamesheets.gamesheets.fileprocess.model.FileProcessStatus;
 import com.gamesheets.gamesheets.games.GameService;
 import com.gamesheets.gamesheets.games.dto.Game;
 import com.gamesheets.gamesheets.shared.storage.StorageService;
@@ -35,14 +36,18 @@ public class FileProcessService {
 
     public FileProcess createFileProcess(MultipartFile file) {
         FileProcess fileProcess = new FileProcess();
+
         validateFile(file);
-        // add logic of status of file process
+        fileProcess.setStatus(FileProcessStatus.PROCESSING);
+
         List<String> titles = getTitlesFromCSV(file);
         List<Game> games = gameService.getGamesDetails(titles);
         MultipartFile generatedFile = generateCSVFromGames(games);
 
         String url = storageService.uploadFile(generatedFile);
+
         fileProcess.setFileUrl(url);
+        fileProcess.setStatus(FileProcessStatus.COMPLETED);
 
         return fileProcessRepository.save(fileProcess);
     }
@@ -84,16 +89,17 @@ public class FileProcessService {
 
     private MultipartFile generateCSVFromGames(List<Game> games) {
         List<String> csvLines = new ArrayList<>(games.size());
+        csvLines.add("Title,Background Image,Released,Platforms,Metacritic");
 
         for (Game game : games) {
             String platforms = String.join(" | ", game.platforms());
-            String[] lines = {game.title(), game.backgroundImage(), game.released(), platforms, game.metacritic().toString()};
+            String metacriticScore = (game.metacritic() == null) ? "" : game.metacritic().toString();
+
+            String[] lines = {game.title(), game.backgroundImage(), game.released(), platforms, metacriticScore};
+
             csvLines.add(String.join(",", lines));
         }
         String contentFile = String.join("\n", csvLines);
-        // lines = batman, link, released, ...
-        // "batman, link, ..."
-        // "batman,link\nrobin,link\n",
 
         return new MockMultipartFile(
                 "file",

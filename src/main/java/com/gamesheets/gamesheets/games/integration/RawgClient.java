@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamesheets.gamesheets.games.ExternalGameAPIException;
 import com.gamesheets.gamesheets.games.dto.Game;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URI;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+@Component
 public class RawgClient implements ExternalGameAPI {
     private final HttpClient client = HttpClient.newHttpClient();
     private final String apiKey;
@@ -23,7 +26,7 @@ public class RawgClient implements ExternalGameAPI {
     String baseURL = "https://api.rawg.io/api/games";
     Logger logger = Logger.getLogger(RawgClient.class.getName());
 
-    public RawgClient(String apiKey) {
+    public RawgClient(@Value("${rawg.api.key}") String apiKey) {
         this.apiKey = apiKey;
     }
 
@@ -37,7 +40,7 @@ public class RawgClient implements ExternalGameAPI {
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
-            logger.severe("Error while sending request to URL" + request.toString());
+            logger.severe("Error while sending request to URL" + request.bodyPublisher().toString());
             throw new ExternalGameAPIException("Error while sending request to URL: " + e.getMessage(), e);
         }
 

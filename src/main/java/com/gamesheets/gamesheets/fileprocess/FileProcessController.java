@@ -17,15 +17,15 @@ import java.util.UUID;
 public class FileProcessController {
     private final FileProcessService fileProcessService;
 
-    @GetMapping
-    public ResponseEntity<?> getFileProcessById(@RequestParam UUID id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getFileProcessById(@PathVariable UUID id) {
         FileProcess fileProcess = fileProcessService.getFileProcessById(id);
         return ResponseEntity.ok(fileProcess);
     }
 
-    @GetMapping
-    public ResponseEntity<Resource> downloadFileById(@RequestParam UUID fileProcessId) {
-        Resource gamesCSV = fileProcessService.getCSVByFileProcessId(fileProcessId);
+    @GetMapping("/{id}/download")
+    public ResponseEntity<Resource> downloadFileById(@PathVariable UUID id) {
+        Resource gamesCSV = fileProcessService.getCSVByFileProcessId(id);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,

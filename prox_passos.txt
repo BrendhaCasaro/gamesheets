@@ -1,0 +1,17 @@
+CI (Testes e build da imagem docker) com github actions
+
+Testes de integração
+
+Testes de unitários completos
+
+deploy em VM 🤠🎆🎆
+
+Autenticação
+
+Implementar o google cloud storage
+
+Processamento assincrono (BackgroudJob) com Kafka
+
+Reqs à Rawg API com multi thread (talvez)
+
+Tratar possíveis erros da API (429, 400, mudanças) e adicionar retry ou lógica ideal
